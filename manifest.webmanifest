@@ -1,0 +1,10 @@
+{
+  "name": "Noro Civic Accountability",
+  "short_name": "Noro",
+  "description": "Civic accountability, made visible.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f4",
+  "theme_color": "#f6f7f4",
+  "icons": [{ "src": "/noro-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
