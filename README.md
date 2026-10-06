@@ -29,21 +29,41 @@ Photo compression re-encodes the image locally, which removes source EXIF metada
 
 Optional driving directions use OpenRouteService only when a user requests them and the key is configured. Without a key, the map and assigned locations continue to work and the route control explains that routing is unavailable.
 
-## Configure integrations
+## Local environment setup
 
-Copy `.env.example` to `.env.local`:
+1. Install dependencies:
 
-```sh
-cp .env.example .env.local
-```
+   ```sh
+   npm install
+   ```
 
-Then configure the values as needed:
+2. Create `.env.local` in the project root. You can copy `.env.example` and edit the local file:
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY` (publishable/anon key only; never a service-role key)
-- `VITE_OPENROUTESERVICE_API_KEY` (optional; restrict the key to the intended browser origin)
+   ```sh
+   cp .env.example .env.local
+   ```
 
-Without Supabase values, NORO runs in browser-local demo mode. With a URL and publishable/anon key, Supabase Auth can be configured; this does **not** connect issue workflows or make workspace data server-backed. The system status page reports configuration without showing key values. The `.env.local` file is ignored by Git.
+3. Configure values as needed:
+
+   ```dotenv
+   VITE_APP_NAME=NORO
+   VITE_APP_ENV=local
+
+   VITE_SUPABASE_URL=
+   VITE_SUPABASE_ANON_KEY=
+
+   VITE_MAP_PROVIDER=openstreetmap
+
+   VITE_OPENROUTESERVICE_API_KEY=
+   ```
+
+4. Start NORO:
+
+   ```sh
+   npm run dev
+   ```
+
+`.env.local` is private and must never be committed; `.env.example` is safe to commit and contains no credentials. The Supabase URL and publishable/anon key enable Supabase Auth configuration, but do not connect issue workflows or prove database connectivity. Without both values, NORO remains in browser-local demo mode. OpenRouteService is optional; without its key, OpenStreetMap maps continue to work while driving directions may be unavailable. The Environment & system status page reports configuration presence without showing key values.
 
 Supabase migration files are a schema foundation and have **not** been applied to a test or live database. Before production use, apply and validate them in a non-production project, create the private `noro-evidence` Storage bucket, connect UI reads/writes to governed RPCs, and test RLS with real identities. Browser-local demo persistence is not server-enforced.
 
