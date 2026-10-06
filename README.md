@@ -31,13 +31,21 @@ Optional driving directions use OpenRouteService only when a user requests them 
 
 ## Configure integrations
 
-Copy `.env.example` to `.env.local` and set:
+Copy `.env.example` to `.env.local`:
+
+```sh
+cp .env.example .env.local
+```
+
+Then configure the values as needed:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY` (publishable/anon key only; never a service-role key)
 - `VITE_OPENROUTESERVICE_API_KEY` (optional; restrict the key to the intended browser origin)
 
-Supabase migration files are a schema foundation and have **not** been applied to a live database. Before production use, apply and validate them in a non-production project, create the private `noro-evidence` Storage bucket, connect UI reads/writes to governed RPCs, and test RLS with real identities. The current demo persists to browser local storage and is not server-enforced.
+Without Supabase values, NORO runs in browser-local demo mode. With a URL and publishable/anon key, Supabase Auth can be configured; this does **not** connect issue workflows or make workspace data server-backed. The system status page reports configuration without showing key values. The `.env.local` file is ignored by Git.
+
+Supabase migration files are a schema foundation and have **not** been applied to a test or live database. Before production use, apply and validate them in a non-production project, create the private `noro-evidence` Storage bucket, connect UI reads/writes to governed RPCs, and test RLS with real identities. Browser-local demo persistence is not server-enforced.
 
 ## Verification
 
