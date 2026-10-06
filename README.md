@@ -42,6 +42,7 @@ Supabase migration files are a schema foundation and have **not** been applied t
 ## Verification
 
 ```sh
+npm run lint
 npm test
 npm run build
 npm audit --omit=dev
