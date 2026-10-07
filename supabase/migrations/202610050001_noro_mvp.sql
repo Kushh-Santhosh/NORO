@@ -181,11 +181,11 @@ create table public.audit_events (
 create or replace function public.nearby_registered_assets(p_point geography,p_radius_m integer default 500)
 returns table(asset_id uuid,public_code text,category text,distance_m double precision)
 language sql stable security invoker set search_path = '' as $$
-  select a.id,a.public_code,c.name,st_distance(a.location,p_point)
+  select a.id,a.public_code,c.name,public.st_distance(a.location,p_point)
   from public.assets a join public.asset_categories c on c.id=a.category_id
   where p_point is not null and p_radius_m between 1 and 2000 and a.location_tier<>'hidden'
-    and st_dwithin(a.location,p_point,p_radius_m)
-  order by a.location <-> p_point limit 50
+    and public.st_dwithin(a.location,p_point,p_radius_m)
+  order by a.location OPERATOR(public.<->) p_point limit 50
 $$;
 
 create index role_grants_user_role_ward_idx on public.role_grants(user_id,role,ward_id) where active;
@@ -567,7 +567,7 @@ create policy issues_assignee_read on public.issues for select to authenticated 
 create policy assignments_scoped_read on public.assignments for select to authenticated using(public.can_read_assignment(issue_id,assignee_user_id,assignee_org_id));
 create policy evidence_participant_read on public.evidence for select to authenticated using(exists(select 1 from public.issues i join public.assets a on a.id=i.asset_id where i.id=evidence.issue_id and (i.reporter_id=(select auth.uid()) or evidence.uploader_id=(select auth.uid()) or public.current_has_role('verifier',a.ward_id) or public.current_has_role('municipal_officer',a.ward_id) or public.current_has_role('auditor',a.ward_id) or public.can_access_assigned_issue(i.id))));
 create policy ai_assessments_participant_read on public.ai_assessments for select to authenticated using(exists(select 1 from public.issues i join public.assets a on a.id=i.asset_id where i.id=ai_assessments.issue_id and (i.reporter_id=(select auth.uid()) or public.current_has_role('municipal_officer',a.ward_id) or public.current_has_role('verifier',a.ward_id) or public.can_access_assigned_issue(i.id))));
-create policy repair_claims_participant_read on public.repair_claims for select to authenticated using(contractor_user_id=(select auth.uid()) or public.can_access_assigned_issue(issue_id) or exists(select 1 from public.issues i join public.assets a on a.id=i.asset_id where i.id=repair_claims.issue_id and (i.reporter_id=(select auth.uid()) or public.current_has_role('verifier',a.ward_id) or public.current_has_role('municipal_officer',a.ward_id) or public.current_has_role('auditor',a.ward_id)));
+create policy repair_claims_participant_read on public.repair_claims for select to authenticated using(contractor_user_id=(select auth.uid()) or public.can_access_assigned_issue(issue_id) or exists(select 1 from public.issues i join public.assets a on a.id=i.asset_id where i.id=repair_claims.issue_id and (i.reporter_id=(select auth.uid()) or public.current_has_role('verifier',a.ward_id) or public.current_has_role('municipal_officer',a.ward_id) or public.current_has_role('auditor',a.ward_id))));
 create policy conflict_own_read on public.conflict_declarations for select to authenticated using(verifier_id=(select auth.uid()) or public.current_has_role('coordinator'));
 create policy conflict_own_insert on public.conflict_declarations for insert to authenticated with check(verifier_id=(select auth.uid()) and exists(select 1 from public.issues i join public.assets a on a.id=i.asset_id where i.id=conflict_declarations.issue_id and public.current_has_role('verifier',a.ward_id)));
 create policy verification_participant_read on public.verifications for select to authenticated using(verifier_id=(select auth.uid()) or exists(select 1 from public.issues i join public.assets a on a.id=i.asset_id where i.id=verifications.issue_id and (i.reporter_id=(select auth.uid()) or public.current_has_role('municipal_officer',a.ward_id) or public.current_has_role('auditor',a.ward_id))));
@@ -631,7 +631,7 @@ revoke update,delete on public.audit_events from public,anon,authenticated;
 -- assets are excluded. Base asset rows remain unavailable to anonymous clients.
 create view public.public_asset_registry with(security_invoker=false) as
 select a.id,a.public_code,a.ward_id,a.category_id,a.location_tier,a.condition,
-  case when a.location_tier='exact' then a.location else st_snaptogrid(a.location::geometry,0.001)::geography end as public_location
+  case when a.location_tier='exact' then a.location else public.st_snaptogrid(a.location::public.geometry,0.001)::public.geography end as public_location
 from public.assets a where a.location_tier<>'hidden';
 create view public.public_issue_ledger with(security_invoker=false) as
 select i.id,i.public_code,i.asset_id,i.fault_type,i.status,i.severity,i.opened_at,i.claimed_at,i.verified_closed_at,

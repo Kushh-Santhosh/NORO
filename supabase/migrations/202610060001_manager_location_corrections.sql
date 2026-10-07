@@ -32,8 +32,8 @@ begin
   select event_hash into prev from public.audit_events order by id desc limit 1;
   select role::text into role_name from public.role_grants where user_id=new.actor_id and active
     and role in ('municipal_officer','ward_admin') order by role limit 1;
-  before_data:=jsonb_build_object('location',public.st_asgeojson(new.original_location::geometry)::jsonb,'asset_id',new.original_asset_id);
-  after_data:=jsonb_build_object('location',public.st_asgeojson(new.updated_location::geometry)::jsonb,'asset_id',new.updated_asset_id,'reason',new.reason);
+  before_data:=jsonb_build_object('location',public.st_asgeojson(new.original_location::public.geometry)::jsonb,'asset_id',new.original_asset_id);
+  after_data:=jsonb_build_object('location',public.st_asgeojson(new.updated_location::public.geometry)::jsonb,'asset_id',new.updated_asset_id,'reason',new.reason);
   insert into public.audit_events(actor_id,actor_role,action,entity_type,entity_id,before_state,after_state,created_at,previous_hash,event_hash)
   values(new.actor_id,coalesce(role_name,'system'),'issue location corrected','issue',new.issue_id,before_data,after_data,event_time,prev,
     encode(digest(coalesce(prev,'')||'|issue location corrected|issue|'||new.issue_id::text||'|'||before_data::text||'|'||after_data::text||'|'||event_time::text,'sha256'),'hex'));
@@ -59,15 +59,15 @@ create or replace function public.correct_issue_location(
 language plpgsql security definer set search_path = '' as $$
 declare
   i public.issues;
-  old_location geography;
+  old_location public.geography;
   old_asset uuid;
   target_ward uuid;
 begin
   if (select auth.uid()) is null then
     raise exception using errcode='42501',message='Authentication required';
   end if;
-  if p_location is null or public.st_srid(p_location::geometry)<>4326
-     or public.geometrytype(p_location::geometry)<>'POINT' then
+  if p_location is null or public.st_srid(p_location::public.geometry)<>4326
+     or public.geometrytype(p_location::public.geometry)<>'POINT' then
     raise exception using errcode='23514',message='Choose a valid map point';
   end if;
   if nullif(trim(p_reason),'') is null then
@@ -87,7 +87,7 @@ begin
   select a.ward_id into target_ward from public.assets a where a.id=coalesce(p_asset,i.asset_id);
   if target_ward is null then
     select w.id into target_ward from public.wards w
-      where w.geom is not null and public.st_covers(w.geom::geometry,p_location::geometry) limit 1;
+      where w.geom is not null and public.st_covers(w.geom::public.geometry,p_location::public.geometry) limit 1;
   end if;
   if target_ward is null then
     raise exception using errcode='23514',message='The corrected point must fall inside a configured ward';

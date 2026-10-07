@@ -1,21 +1,21 @@
 # Governance rules
 
-## Closure rule
+## State and closure
 
-A contractor cannot close an issue. The assigned contractor must accept and start work, then submit repair notes and evidence; this moves the issue directly to **Verification pending**. An independent verifier who is neither reporter nor repairer records a checklist, conflict declaration, and evidence. A pass sets **Verified closed**; a fail reopens the same issue.
+A submitted report starts in review. An authorized manager validates it and assigns an eligible service organization. The assigned contractor accepts, starts work, and submits repair notes and evidence. A repair claim moves the report to verification pending; it is not a closure. An independent verifier must be separate from the reporter and repairer, declare conflict status, provide evidence and checklist results, and record pass or fail. Pass can close the issue subject to category risk rules; fail reopens the same issue for rework. Streetlights require after-dark verification; non-lighting assets do not.
 
-## Roles
+These transitions are implemented in PostgreSQL RPCs and triggers as well as demonstrated in the browser-only preview domain. The preview's checks are not a security boundary.
 
-The normal product roles are Public, Citizen, Manager, Contractor, and Verifier. The demo has one named identity each for Citizen (Asha Rao), Manager (Meera Nair, Civic Operations Manager), Contractor (Imran Khan, CivicWorks Electrical Services), and Verifier (Ravi Menon). Public surfaces are anonymous and read-only. Demo identity shortcuts are only on `/demo` and `/signin`; no workspace persona switcher is shown.
+## Roles and authorization
 
-The local demo role checks are not a security boundary. The SQL foundation uses role grants, scoped assignment checks, RLS, governed RPCs, private evidence paths, and append-only audit events. The migration has not been applied or live-tested.
+The operational roles are Citizen, Manager (municipal officer), Contractor, Verifier, and unauthenticated Public. Supabase Auth identifies a user. Active role grants, ward scope, assignment checks, RLS, Storage policies, and RPC authorization govern live records. The URL role is only a requested workspace; it does not grant access. Manager/Verifier accounts require administrator provisioning. Contractor registration is a request, not approval.
 
-## Evidence assistance
+The demo has four fixed synthetic personas (Asha Rao, Meera Nair, Imran Khan, Ravi Menon). Do not treat their local browser identities as Auth accounts or claim their sample events are field results.
 
-Noro Evidence Assist is advisory. The current demo measures coarse image brightness locally and can suggest a retake. It does not determine authenticity, asset type, responsibility, issue validity, or any governance state. The schema keeps AI assessments in a separate entity from issues and verification records.
+## Evidence and privacy
 
-## Privacy and proposed status
+Evidence Assist in the demo gives simple image-quality advice only. It does not establish authenticity or decide responsibility. Live evidence is stored in a private bucket, and public-facing database views exclude file paths and personal identifiers. Public coordinates must follow the asset's location privacy tier. Audit events are append-only through database guards and triggers.
 
-All demo identities, locations, issues, and metrics are fictional. OSM basemap geography is real; marker locations are approximate synthetic points. Photo re-encoding removes source metadata in the demo path, and public views do not expose photo files or reporter names. The product is **PROPOSED, NOT ADOPTED** and has no government integration.
+## Status and operating limits
 
-The browser audit chain is illustrative only. Production requires live RPC/RLS testing, administrator and role provisioning, retention rules, backups, and security review.
+NORO is a proposed civic service model. The repository does not imply government adoption or integration. Review migration status, RLS policies, RPCs, Storage policies, public views, retention, backups, and role provisioning for the exact target project before using any deployment operationally.

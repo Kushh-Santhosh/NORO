@@ -2,7 +2,7 @@ export interface EnvironmentStatus {
   application: 'running'
   mode: 'demo' | 'configured'
   supabaseConfigured: boolean
-  workflowPersistence: 'browser-local'
+  workflowPersistence: 'browser-local-demo+supabase-authenticated'
   routingConfigured: boolean
   mapsAvailable: true
 }
@@ -14,7 +14,7 @@ export function getEnvironmentStatus(): EnvironmentStatus {
     application: 'running',
     mode: supabaseConfigured ? 'configured' : 'demo',
     supabaseConfigured,
-    workflowPersistence: 'browser-local',
+    workflowPersistence: 'browser-local-demo+supabase-authenticated',
     routingConfigured: Boolean(import.meta.env.VITE_OPENROUTESERVICE_API_KEY?.trim()),
     mapsAvailable: true,
   }

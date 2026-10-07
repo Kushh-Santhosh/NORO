@@ -1,18 +1,42 @@
-# Testing and verification
+# Testing and acceptance
 
 ## Local checks
 
-- `npm test` — deterministic role and transition acceptance tests.
-- `npm run build` — TypeScript project build and Vite production bundle.
-- `npm audit` — dependency advisory check.
-- Chrome acceptance run — report creation, report verification gate, assignment, claim, independent check, failed verification/reopen, reassignment, passing verification/closure, public ledger, and asset passport. Checked 375, 390, 430, 1024, and 1440 CSS-pixel widths; no horizontal overflow or browser console/network errors were observed. The test reset the browser demo data afterward.
+Run from the repository root:
 
-## Backend verification still required
+```sh
+npm run lint
+npm test -- --reporter=dot
+npm run build
+npm audit --omit=dev
+git diff --check
+```
 
-The SQL migration was reviewed but not applied to a Supabase project, as requested. Before connecting production data, run it in a disposable project and verify: reporter and repairer cannot verify; a conflicted verifier cannot start or decide a check; checklists and verifier evidence are mandatory; a repair claim remains `repair_claimed` until an independent verifier starts the check; closure cannot happen without a passing independent verification; high-risk assets require two distinct passes for the current repair claim; a failed check reopens the issue; contractor reads/evidence are limited to the current assignment; public reads expose no PII or hidden/approximate coordinates; anonymous and out-of-ward writes fail; profile organization and role grants cannot be self-edited; and audit/evidence update or delete is denied.
+Vitest covers local workflow transitions and backend mapping helpers. The current suite has 18 tests across two files. These checks do not exercise every live RPC or a browser journey.
 
-Review Supabase database advisors and inspect policies with authenticated test accounts. Configure a private evidence bucket and Storage policies before using evidence URLs; this migration stores evidence metadata only.
+## Linked test database status
 
-## Remaining browser work
+The linked project is a dedicated NORO test environment. The linked project is the dedicated NORO test environment. The final read-only migration list confirms all six local migrations applied, including `202610070004_organisation_directory_read_grant.sql`. The checkout is linked to that project. A fresh clone must be linked to the intended test project before using `--linked` commands. The migration push applied only 004 after reviewing its grant and existing RLS policy; the database was not reset.
 
-The browser test used the existing local Chrome through the DevTools protocol; there is no committed automated E2E suite. Screen-reader review, keyboard-only end-to-end review, contrast measurement, and the 768px breakpoint still need a dedicated accessibility pass.
+Read-only checks against the connected project confirmed that the four controlled acceptance accounts can sign in and read their corresponding active role grants; the manager audit query succeeds; curated public registry and ledger views are queryable; and the authenticated PostGIS `nearby_registered_assets` RPC returns results. The current synthetic fixture has one ward, two asset categories (electrical fixture and streetlight), two public asset rows, and two verified-closed issue records. It does not support claiming toilet, road, footpath, or drainage scenarios were tested.
+
+Earlier controlled backend acceptance exercised an electrical repair workflow with failed verification, rework, and a passing independent check, plus the streetlight after-dark rejection/pass rule. The current repository cleanup did not repeat those mutating workflows. Read results in this section do not by themselves prove cross-ward isolation or every write policy.
+
+## Controlled acceptance setup
+
+Use only the dedicated test project. Before applying schema, inspect the configured project reference and compare `supabase migration list --linked` with `supabase/migrations/`. Do not reset or delete existing data. `supabase/test/acceptance_setup.sql` expects four already-created controlled Auth accounts with the `.example` test addresses in the script; it creates synthetic ward, organization, specialization, and assets, but no reports. It does not insert users into `auth.users`.
+
+The full backend acceptance should exercise citizen report submission; manager validation, correction, and assignment; contractor accept/start/claim; verifier conflict declaration and pass/fail; failed verification followed by rework and passing verification; notifications; audit events; private evidence upload/read; public-view privacy; PostGIS nearby lookup; and RLS isolation for each role and anonymous access. Verify that repair claim and closure are different states, lighting alone requires a night check, and a failed check reopens the same issue.
+
+## Manual browser acceptance
+
+Full browser acceptance has not been completed in this session, and no committed browser E2E harness is present. Complete these checks manually before release:
+
+- Public: landing, live or preview map, public ledger, asset passport/history, and privacy fields.
+- Auth: citizen and contractor signup, valid/invalid sign-in, password recovery, role routing, and sign-out.
+- Citizen: report toilet, road, footpath, drainage, and streetlight cases; choose location/asset, attach a photo, review, submit, and follow the timeline.
+- Manager: validate, correct location, assign a service-matched contractor, inspect notifications and audit history.
+- Contractor: view own assignments, accept, start, add repair notes/evidence, and claim completion.
+- Verifier: inspect repair evidence, declare conflict status, reject conflicted or self-verification, require night check for lighting only, and pass/fail with evidence/reason.
+- Rework/public: verify fail reopens the same report, second claim followed by pass closes it, and public outcome omits private fields.
+- Responsive/accessibility: check 390, 430, 768, 1024, and 1440 CSS-pixel widths; keyboard/focus order, Escape behavior, touch targets, labels/errors, contrast, reduced motion, and horizontal overflow.
